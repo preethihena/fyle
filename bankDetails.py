@@ -5,15 +5,19 @@ import datetime
 
 from getData import get_IFSC,get_Branches
 
+def authentcate(token = None):
+	decode = jwt.decode(token, 'secret', algorithms=['HS256'])
+
 class bank_using_ifsc(object):
 
     def on_get(self, req, resp,ifsc):
     	try:
-    		token=req.get_header('Authorization')
-    		token=token.split()
-    		decoded=jwt.decode(token[1], 'secret', algorithms=['HS256'])
+    		token=req.get_header('Authorization').split()
+    		authentcate(token[1])
+    		doc = {}
     		bank_details = get_IFSC(ifsc)
-    		resp.body = json.dumps(bank_details, ensure_ascii=False)
+    		doc = bank_details
+    		resp.body = json.dumps(doc, ensure_ascii = False)
     		resp.status = falcon.HTTP_200
     	except jwt.ExpiredSignatureError:
     		error_msg="Token expired"
@@ -26,17 +30,18 @@ class branches_using_bank(object):
 	def on_get(self, req, resp,city,bank):
 
 		try:
-			token=req.get_header('Authorization')
-			token=token.split()
-			decoded=jwt.decode(token[1], 'secret', algorithms=['HS256'])
+			token=req.get_header('Authorization').split()
+			authentcate(token[1])
 			limit=req.get_param('limit')
 			offset=req.get_param('offset')
 			if limit is None:
 				limit = 0
 			if offset is None:
 				offset = 0
+			doc = {}
 			bank_details = get_Branches(city,bank,limit,offset)
-			resp.body = json.dumps(bank_details, ensure_ascii=False)
+			doc['branches']= bank_details
+			resp.body = json.dumps(doc, ensure_ascii = False)
 			resp.status = falcon.HTTP_200
 
 		except jwt.ExpiredSignatureError:
@@ -52,5 +57,6 @@ class token_generate(object):
 		encoded = jwt.encode({'iss':data,
 					'exp': datetime.datetime.utcnow() + datetime.timedelta(days=5)}, 
 					'secret',algorithm='HS256').decode('utf-8')
-		resp.body=json.dumps(encoded,ensure_ascii=False)
+		data = {'token':encoded}
+		resp.body=json.dumps(data,ensure_ascii=False)
 		resp.status=falcon.HTTP_200
