@@ -7,13 +7,23 @@ token="${token%\"}"
 token="${token#\"}"
 echo "\nToken : $token\n"
 echo "Query 1: GET API to fetch a bank details,given branch IFSC code: $ifsc \n"
-output=`curl -s -H "Authorization: Bearer ${token}" --request GET $url/banks/$ifsc`
+
+output=`curl -s -H "Authorization: Bearer ${token}" --request GET $url/banks?ifsc={$ifsc}`
+
 
 echo $output | python -m json.tool
 
 echo "\nQuery 2: GET API to fetch all details of branches,given \
 bank name = INDIAN OVERSEAS BANK and a city = MUMBAI \n"
+bank="INDIAN%20OVERSEAS%20BANK"
+city="MUMBAI"
+limit=5
+offset=0
+
 output=`curl -s -H "Authorization: Bearer ${token}"  --request GET \
-$url/branches/INDIAN%20OVERSEAS%20BANK/MUMBAI?limit=5"&"offset=0`
+$url/branches?bank={$bank}"&"city={$city}"&"limit={$limit}"&"offset={$offset}`
+
 
 echo $output | python -m json.tool
+
+

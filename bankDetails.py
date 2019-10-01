@@ -10,10 +10,11 @@ def authentcate(token = None):
 
 class bank_using_ifsc(object):
 
-    def on_get(self, req, resp,ifsc):
+    def on_get(self, req, resp):
     	try:
     		token=req.get_header('Authorization').split()
     		authentcate(token[1])
+    		ifsc=req.get_param('ifsc')
     		doc = {}
     		bank_details = get_IFSC(ifsc)
     		doc = bank_details
@@ -27,11 +28,13 @@ class bank_using_ifsc(object):
 
 class branches_using_bank(object):
 
-	def on_get(self, req, resp,city,bank):
+	def on_get(self, req, resp):
 
 		try:
 			token=req.get_header('Authorization').split()
 			authentcate(token[1])
+			bank=req.get_param('bank')
+			city=req.get_param('city')
 			limit=req.get_param('limit')
 			offset=req.get_param('offset')
 			if limit is None:
@@ -39,7 +42,7 @@ class branches_using_bank(object):
 			if offset is None:
 				offset = 0
 			doc = {}
-			bank_details = get_Branches(city,bank,limit,offset)
+			bank_details = get_Branches(bank,city,limit,offset)
 			doc['branches']= bank_details
 			resp.body = json.dumps(doc, ensure_ascii = False)
 			resp.status = falcon.HTTP_200
@@ -58,5 +61,6 @@ class token_generate(object):
 					'exp': datetime.datetime.utcnow() + datetime.timedelta(days=5)}, 
 					'secret',algorithm='HS256').decode('utf-8')
 		data = {'token':encoded}
+		print(encoded)
 		resp.body=json.dumps(data,ensure_ascii=False)
 		resp.status=falcon.HTTP_200
